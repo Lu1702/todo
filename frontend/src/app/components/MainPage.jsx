@@ -182,7 +182,7 @@ const MainPage = () => {
               <div key={task.id} className="relative bg-white rounded-md p-3 flex justify-between items-center shadow-sm border border-gray-300 mt-2">
                 
                 {/* Status Badge */}
-                <div className={`absolute -top-3 left-4 px-3 py-0.5 text-[9px] font-bold rounded-full border border-gray-500 text-black ${
+                <div className={`absolute -top-3 left-0 px-3 py-0.5 text-[9px] font-bold rounded-full border border-gray-500 text-black w-[150px] text-center ${
                   task.status === 'Complete' ? 'bg-[#cde49c]' : 'bg-[#da8386]'
                 }`}>
                   {task.status}
@@ -199,7 +199,7 @@ const MainPage = () => {
                         setTaskToEdit(task); 
                         setIsEditTaskModalOpen(true); 
                       }} 
-                      className="bg-[#fbe49c] text-black border border-gray-500 px-4 py-0.5 text-xs font-bold rounded hover:bg-yellow-300 transition"
+                      className="bg-[#fbe49c] rounded-[10px] text-black border border-gray-500 px-4 py-0.5 text-xs font-bold rounded hover:bg-yellow-300 transition"
                     >
                       EDIT
                     </button>
@@ -211,7 +211,7 @@ const MainPage = () => {
                   {task.status === 'Incomplete' && (
                     <button 
                       onClick={() => handleMarkDone(task.id)}
-                      className="bg-[#9cd3a1] text-black border border-gray-500 px-4 py-0.5 text-[10px] font-bold rounded hover:bg-green-400 transition"
+                      className="bg-[#9cd3a1] rounded-[10px] text-black border border-gray-500 px-4 py-0.5 text-[10px] font-bold rounded hover:bg-green-400 transition"
                     >
                       Done
                     </button>
@@ -220,7 +220,7 @@ const MainPage = () => {
                     setTaskToDelete(task.id);
                     setIsDeleteTaskModalOpen(true);
                   }}
-                    className="bg-[#da8386] text-black border border-gray-500 px-4 py-0.5 text-[10px] font-bold rounded hover:bg-red-400 transition"
+                    className="bg-[#da8386] rounded-[10px] text-black border border-gray-500 px-4 py-0.5 text-[10px] font-bold rounded hover:bg-red-400 transition"
                   >
                     Delete
                   </button>
