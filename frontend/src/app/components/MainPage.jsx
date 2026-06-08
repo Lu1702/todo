@@ -1,16 +1,19 @@
 "use client";
 
+import { title } from 'process';
 import React, { useState, useEffect } from 'react';
 
 const MainPage = () => {
   const [activeTab, setActiveTab] = useState('All Status');
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
-
+  const [taskToDelete, setTaskToDelete] = useState(null);
+  const [taskToEdit, setTaskToEdit] = useState(null);
   // 1. Các State quản lý dữ liệu động
   const [tasks, setTasks] = useState([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState('High');
-
+  const [isEditTaskModalOpen, setIsEditTaskModalOpen] = useState(false);
+  const [isDeleteTaskModalOpen, setIsDeleteTaskModalOpen] = useState(false);
   // Đặt chung một URL để dễ gọi
   const API_URL = "http://localhost:8000/api/v1/tasks";
 
@@ -83,20 +86,47 @@ const MainPage = () => {
       console.error("Lỗi cập nhật task:", error);
     }
   };
-
-  // [DELETE] Xóa Task
-  const handleDelete = async (taskId) => {
-    if (!confirm("Bạn có chắc chắn muốn xóa?")) return;
+  const handleEditTask = async () =>{
     try {
-      const response = await fetch(`${API_URL}/${taskId}`, {
-        method: 'DELETE',
+      const response = await fetch(`${API_URL}/${taskToEdit}`, {
+          method: 'PUT',
+          header:{
+            'Content-Type':'application/json',
+          },
+          body: JSON.stringify({
+            title: taskToEdit.title,
+            priority: taskToEdit.priority,
+            status: taskToEdit.status
+          })
       });
-      if (response.ok) {
+      if(response.ok){
         fetchTasks();
+        setIsEditTaskModalOpen(false);
+        setTaskToEdit(null);
+      } else{
+        console.error("Backend said somethingn wrong!", await response.json);
       }
-    } catch (error) {
-      console.error("Lỗi khi xóa task:", error);
+    }catch (error)
+    {
+      console.error("Have some trouble with editing this task!", error);
     }
+  }
+  // [DELETE] Xóa Task
+  const handleDelete = async () => {
+      try {
+        // Dùng state taskToDelete thay vì taskId
+        const response = await fetch(`${API_URL}/${taskToDelete}`, {
+          method: 'DELETE',
+        });
+        
+        if (response.ok) {
+          fetchTasks();
+          setIsDeleteTaskModalOpen(false); // Xóa xong thì đóng popup luôn
+          setTaskToDelete(null); // Dọn dẹp state
+        }
+      } catch (error) {
+        console.error("Lỗi khi xóa task:", error);
+      }
   };
 
   // ----------------------------------------------------------------
@@ -131,10 +161,10 @@ const MainPage = () => {
       </header>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-6 rounded-[10px]">
         
         {/* Tabs */}
-        <div className="flex bg-[#82abc2] w-fit p-2 rounded-t-[10px] gap-2 border-b-2 border-[#82abc2]">
+        <div className="flex bg-[#82abc2] w-fit p-2 rounded-[10px] gap-2 border-b-2 border-[#82abc2]">
           <button onClick={() => setActiveTab('All Status')} className={`px-6 py-1.5 rounded text-sm font-bold border border-gray-600 transition bg-[#fbe49c] text-black ${activeTab === 'All Status' ? 'underline underline-offset-4' : ''}`}>
             All Status
           </button>
@@ -147,7 +177,7 @@ const MainPage = () => {
         </div>
 
         {/* Task List */}
-        <div className="bg-[#79a3bc] rounded-b-xl rounded-tr-xl border-2 border-[#82abc2] p-4 relative min-h-[65vh] shadow-inner">
+        <div className="bg-[#79a3bc] rounded-[10px] rounded-b-xl rounded-tr-xl border-2 border-[#82abc2] p-4 relative min-h-[65vh] shadow-inner mt-2 h-[70vh] overflow-y-auto">
           <div className="flex flex-col gap-5 pt-2">
             {filteredTasks.map((task) => (
               <div key={task.id} className="relative bg-white rounded-md p-3 flex justify-between items-center shadow-sm border border-gray-300 mt-2">
@@ -165,7 +195,13 @@ const MainPage = () => {
                     {task.title} <span className={getPriorityColor(task.priority)}>[{task.priority}]</span>
                   </span>
                   {task.status === 'Incomplete' && (
-                    <button className="bg-[#fbe49c] text-black border border-gray-500 px-4 py-0.5 text-[10px] font-bold rounded hover:bg-yellow-300 transition">
+                    <button 
+                      onClick={() => {
+                        setTaskToEdit(task); 
+                        setIsEditTaskModalOpen(true); 
+                      }} 
+                      className="bg-[#fbe49c] text-black border border-gray-500 px-4 py-0.5 text-xs font-bold rounded hover:bg-yellow-300 transition"
+                    >
                       EDIT
                     </button>
                   )}
@@ -181,8 +217,10 @@ const MainPage = () => {
                       Done
                     </button>
                   )}
-                  <button 
-                    onClick={() => handleDelete(task.id)}
+                  <button onClick={() => {
+                    setTaskToDelete(task.id);
+                    setIsDeleteTaskModalOpen(true);
+                  }}
                     className="bg-[#da8386] text-black border border-gray-500 px-4 py-0.5 text-[10px] font-bold rounded hover:bg-red-400 transition"
                   >
                     Delete
@@ -192,7 +230,7 @@ const MainPage = () => {
             ))}
           </div>
 
-          <button onClick={() => setIsAddTaskModalOpen(true)} className="absolute bottom-6 right-6 w-16 h-16 bg-white rounded-full flex justify-center items-center text-4xl text-black border border-gray-400 shadow-lg hover:scale-105 transition hover:bg-gray-50 pb-2">
+          <button onClick={() => setIsAddTaskModalOpen(true)} className="fixed bottom-6 right-6 w-16 h-16 bg-white rounded-full flex justify-center items-center text-4xl text-black border border-gray-400 shadow-lg hover:scale-105 transition hover:bg-gray-50 pb-2">
             +
           </button>
         </div>
@@ -204,13 +242,14 @@ const MainPage = () => {
           <div className="bg-[#729cbe] px-8 py-6 rounded-xl shadow-2xl w-full max-w-[400px]">
             
             <div className="mb-4">
+              <p className="text-[35px]"><strong>CREATE NEW TASK</strong></p>
               <label className="block text-black text-lg font-bold mb-1">Name</label>
               <input 
                 type="text" 
                 value={newTaskTitle}
                 onChange={(e) => setNewTaskTitle(e.target.value)}
-                placeholder="UIX" 
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-400 focus:outline-none focus:ring-2 focus:ring-white placeholder-gray-300 text-black text-lg"
+                placeholder="Design UIX" 
+                className="bg-[#ffffff] w-full px-4 py-2.5 rounded-xl border border-gray-400 focus:outline-none focus:ring-2 focus:ring-white placeholder-gray-300 text-black text-lg"
               />
             </div>
 
@@ -241,6 +280,73 @@ const MainPage = () => {
         </div>
       )}
 
+      {/* POPUP DELETE TASK */}
+      {isDeleteTaskModalOpen && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
+          <div className="bg-[#729cbe] px-8 py-6 rounded-xl shadow-2xl w-full max-w-[400px]">
+            <p className="text-[35px] justify-center"><strong>DO YOU WANT TO DELETE THIS TASK</strong></p>
+            <br></br>
+            <br></br>
+            <div className="flex justify-center gap-4">
+              <button onClick={handleDelete} className="bg-[#9cd3a1] text-black text-lg font-bold px-6 py-1.5 rounded-xl border-2 border-black hover:bg-green-400 transition">
+                Yes
+              </button>
+              <button onClick={() => setIsDeleteTaskModalOpen(false)} className="bg-[#da8386] text-black text-lg font-bold px-6 py-1.5 rounded-xl border-2 border-black hover:bg-red-400 transition">
+                No
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* POPUP EDIT TASK */}
+      {/* POPUP EDIT TASK */}
+      {isEditTaskModalOpen && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
+          <div className="bg-[#729cbe] px-8 py-6 rounded-xl shadow-2xl w-full max-w-[400px]">
+            
+            <div className="mb-4">
+              {/* Đã sửa lại tiêu đề cho đúng ngữ cảnh */}
+              <p className="text-[35px]"><strong>EDIT TASK</strong></p>
+              <label className="block text-black text-lg font-bold mb-1">Name</label>
+              <input 
+                type="text" 
+                // 1. Lấy dữ liệu từ taskToEdit hiển thị lên (thêm || '' để tránh lỗi undefined)
+                value={taskToEdit?.title || ''}
+                // 2. Cập nhật thẳng vào object taskToEdit khi người dùng gõ phím
+                onChange={(e) => setTaskToEdit({ ...taskToEdit, title: e.target.value })}
+                placeholder="Design UIX" 
+                className="bg-[#ffffff] w-full px-4 py-2.5 rounded-xl border border-gray-400 focus:outline-none focus:ring-2 focus:ring-white placeholder-gray-300 text-black text-lg"
+              />
+            </div>
+
+            <div className="mb-8">
+              <label className="block text-black text-lg font-bold mb-1">Priority</label>
+              <select 
+                // 3. Tương tự với Priority
+                value={taskToEdit?.priority || 'Low'}
+                onChange={(e) => setTaskToEdit({ ...taskToEdit, priority: e.target.value })}
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-400 focus:outline-none focus:ring-2 focus:ring-white text-black text-lg bg-white"
+              >
+                <option value="Critical">Critical</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+
+            <div className="flex justify-center gap-4">
+              <button onClick={handleEditTask} className="bg-[#9cd3a1] text-black text-lg font-bold px-6 py-1.5 rounded-xl border-2 border-black hover:bg-green-400 transition">
+                Save
+              </button>
+              <button onClick={() => setIsEditTaskModalOpen(false)} className="bg-[#da8386] text-black text-lg font-bold px-6 py-1.5 rounded-xl border-2 border-black hover:bg-red-400 transition">
+                Cancel
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 };
