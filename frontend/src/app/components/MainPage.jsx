@@ -1,0 +1,248 @@
+"use client";
+
+import React, { useState, useEffect } from 'react';
+
+const MainPage = () => {
+  const [activeTab, setActiveTab] = useState('All Status');
+  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+
+  // 1. Các State quản lý dữ liệu động
+  const [tasks, setTasks] = useState([]);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskPriority, setNewTaskPriority] = useState('High');
+
+  // Đặt chung một URL để dễ gọi
+  const API_URL = "http://localhost:8000/api/v1/tasks";
+
+  // ----------------------------------------------------------------
+  // CÁC HÀM GỌI API (FETCH, POST, PUT, DELETE)
+  // ----------------------------------------------------------------
+
+  // [GET] Lấy danh sách Task
+  const fetchTasks = async () => {
+    try {
+      const response = await fetch(API_URL);
+      const result = await response.json();
+      if (result.status === 200) {
+        setTasks(result.data);
+      }
+    } catch (error) {
+      console.error("Lỗi khi tải dữ liệu:", error);
+    }
+  };
+
+  // Tự động gọi API lấy danh sách khi component vừa render
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  // [POST] Thêm Task mới
+  const handleAddTask = async () => {
+    if (!newTaskTitle.trim()) {
+      alert("Vui lòng nhập tên công việc!");
+      return;
+    }
+
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newTaskTitle,
+          priority: newTaskPriority,
+          status: "Incomplete"
+        })
+      });
+      const result = await response.json();
+      
+      if (result.status === 201) {
+        setIsAddTaskModalOpen(false); // Đóng popup
+        setNewTaskTitle('');          // Xóa chữ trong ô input
+        setNewTaskPriority('High');   // Reset dropdown
+        fetchTasks();                 // Load lại danh sách mới nhất
+      }
+    } catch (error) {
+      console.error("Lỗi khi thêm task:", error);
+    }
+  };
+
+  // [PUT] Đánh dấu hoàn thành
+  const handleMarkDone = async (taskId) => {
+    try {
+      const response = await fetch(`${API_URL}/${taskId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        // Gửi status mới lên server. Ở API Python của bạn quy định là chữ "Complete"
+        body: JSON.stringify({ status: "Complete" }) 
+      });
+      
+      if (response.ok) {
+        fetchTasks(); // Load lại data để giao diện cập nhật
+      }
+    } catch (error) {
+      console.error("Lỗi cập nhật task:", error);
+    }
+  };
+
+  // [DELETE] Xóa Task
+  const handleDelete = async (taskId) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa?")) return;
+    try {
+      const response = await fetch(`${API_URL}/${taskId}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        fetchTasks();
+      }
+    } catch (error) {
+      console.error("Lỗi khi xóa task:", error);
+    }
+  };
+
+  // ----------------------------------------------------------------
+  // CÁC HÀM HỖ TRỢ XỬ LÝ UI
+  // ----------------------------------------------------------------
+
+  // Hàm tự động gán màu tuỳ theo priority từ Backend gửi về
+  const getPriorityColor = (priority) => {
+    const p = priority.toLowerCase();
+    if (p === 'critical') return 'text-red-500';
+    if (p === 'high') return 'text-yellow-400';
+    if (p === 'medium') return 'text-teal-400';
+    return 'text-blue-400'; // low
+  };
+
+  const filteredTasks = tasks.filter(task => {
+    if (activeTab === 'All Status') return true;
+    if (activeTab === 'Incomplete Tasks') return task.status === 'Incomplete';
+    if (activeTab === 'Completed Tasks') return task.status === 'Complete';
+    return true;
+  });
+
+  return (
+    <div className="min-h-screen bg-[#cbf3fd] font-sans flex flex-col relative">
+      
+      {/* HEADER */}
+      <header className="bg-[#121929] px-6 py-3 flex justify-between items-center text-white">
+        <div className="flex items-center gap-3">
+          <img src={"./logo.png"}className='w-10 h-10'></img>
+          <h1 className="text-[#ff9a9e] text-3xl font-bold tracking-wide">Todo Website</h1>
+        </div>
+      </header>
+
+      {/* MAIN CONTENT */}
+      <main className="flex-1 p-6">
+        
+        {/* Tabs */}
+        <div className="flex bg-[#82abc2] w-fit p-2 rounded-t-[10px] gap-2 border-b-2 border-[#82abc2]">
+          <button onClick={() => setActiveTab('All Status')} className={`px-6 py-1.5 rounded text-sm font-bold border border-gray-600 transition bg-[#fbe49c] text-black ${activeTab === 'All Status' ? 'underline underline-offset-4' : ''}`}>
+            All Status
+          </button>
+          <button onClick={() => setActiveTab('Incomplete Tasks')} className={`px-6 py-1.5 rounded text-sm font-bold border border-gray-600 transition bg-[#da8386] text-black ${activeTab === 'Incomplete Tasks' ? 'underline underline-offset-4' : ''}`}>
+            Incomplete Tasks
+          </button>
+          <button onClick={() => setActiveTab('Completed Tasks')} className={`px-6 py-1.5 rounded text-sm font-bold border border-gray-600 transition bg-[#cde49c] text-black ${activeTab === 'Completed Tasks' ? 'underline underline-offset-4' : ''}`}>
+            Completed Tasks
+          </button>
+        </div>
+
+        {/* Task List */}
+        <div className="bg-[#79a3bc] rounded-b-xl rounded-tr-xl border-2 border-[#82abc2] p-4 relative min-h-[65vh] shadow-inner">
+          <div className="flex flex-col gap-5 pt-2">
+            {filteredTasks.map((task) => (
+              <div key={task.id} className="relative bg-white rounded-md p-3 flex justify-between items-center shadow-sm border border-gray-300 mt-2">
+                
+                {/* Status Badge */}
+                <div className={`absolute -top-3 left-4 px-3 py-0.5 text-[9px] font-bold rounded-full border border-gray-500 text-black ${
+                  task.status === 'Complete' ? 'bg-[#cde49c]' : 'bg-[#da8386]'
+                }`}>
+                  {task.status}
+                </div>
+
+                {/* Left Content */}
+                <div className="flex items-center gap-4 mt-1">
+                  <span className="font-bold text-gray-800 text-sm">
+                    {task.title} <span className={getPriorityColor(task.priority)}>[{task.priority}]</span>
+                  </span>
+                  {task.status === 'Incomplete' && (
+                    <button className="bg-[#fbe49c] text-black border border-gray-500 px-4 py-0.5 text-[10px] font-bold rounded hover:bg-yellow-300 transition">
+                      EDIT
+                    </button>
+                  )}
+                </div>
+
+                {/* Right Content */}
+                <div className="flex items-center gap-2 mt-1">
+                  {task.status === 'Incomplete' && (
+                    <button 
+                      onClick={() => handleMarkDone(task.id)}
+                      className="bg-[#9cd3a1] text-black border border-gray-500 px-4 py-0.5 text-[10px] font-bold rounded hover:bg-green-400 transition"
+                    >
+                      Done
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => handleDelete(task.id)}
+                    className="bg-[#da8386] text-black border border-gray-500 px-4 py-0.5 text-[10px] font-bold rounded hover:bg-red-400 transition"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button onClick={() => setIsAddTaskModalOpen(true)} className="absolute bottom-6 right-6 w-16 h-16 bg-white rounded-full flex justify-center items-center text-4xl text-black border border-gray-400 shadow-lg hover:scale-105 transition hover:bg-gray-50 pb-2">
+            +
+          </button>
+        </div>
+      </main>
+
+      {/* POPUP ADD TASK */}
+      {isAddTaskModalOpen && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
+          <div className="bg-[#729cbe] px-8 py-6 rounded-xl shadow-2xl w-full max-w-[400px]">
+            
+            <div className="mb-4">
+              <label className="block text-black text-lg font-bold mb-1">Name</label>
+              <input 
+                type="text" 
+                value={newTaskTitle}
+                onChange={(e) => setNewTaskTitle(e.target.value)}
+                placeholder="UIX" 
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-400 focus:outline-none focus:ring-2 focus:ring-white placeholder-gray-300 text-black text-lg"
+              />
+            </div>
+
+            <div className="mb-8">
+              <label className="block text-black text-lg font-bold mb-1">Priority</label>
+              <select 
+                value={newTaskPriority}
+                onChange={(e) => setNewTaskPriority(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-400 focus:outline-none focus:ring-2 focus:ring-white text-black text-lg bg-white"
+              >
+                <option value="Critical">Critical</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+
+            <div className="flex justify-center gap-4">
+              <button onClick={handleAddTask} className="bg-[#9cd3a1] text-black text-lg font-bold px-6 py-1.5 rounded-xl border-2 border-black hover:bg-green-400 transition">
+                Save
+              </button>
+              <button onClick={() => setIsAddTaskModalOpen(false)} className="bg-[#da8386] text-black text-lg font-bold px-6 py-1.5 rounded-xl border-2 border-black hover:bg-red-400 transition">
+                Cancel
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+};
+
+export default MainPage;
