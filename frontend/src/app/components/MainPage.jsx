@@ -86,31 +86,30 @@ const MainPage = () => {
       console.error("Lỗi cập nhật task:", error);
     }
   };
-  const handleEditTask = async () =>{
+  const handleEditTask = async () => {
     try {
-      const response = await fetch(`${API_URL}/${taskToEdit}`, {
-          method: 'PUT',
-          header:{
-            'Content-Type':'application/json',
-          },
-          body: JSON.stringify({
-            title: taskToEdit.title,
-            priority: taskToEdit.priority,
-            status: taskToEdit.status
-          })
+      const response = await fetch(`${API_URL}/${taskToEdit.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: taskToEdit.title,
+          priority: taskToEdit.priority,
+          status: taskToEdit.status
+        }),
       });
-      if(response.ok){
+      if (response.ok) {
         fetchTasks();
-        setIsEditTaskModalOpen(false);
-        setTaskToEdit(null);
-      } else{
-        console.error("Backend said somethingn wrong!", await response.json);
+        setIsEditTaskModalOpen(false); 
+        setTaskToEdit(null); 
+      } else {
+        console.error("Backend trả về lỗi:", await response.json());
       }
-    }catch (error)
-    {
+    } catch (error) {
       console.error("Have some trouble with editing this task!", error);
     }
-  }
+  };
   // [DELETE] Xóa Task
   const handleDelete = async () => {
       try {
@@ -283,23 +282,48 @@ const MainPage = () => {
       {/* POPUP DELETE TASK */}
       {isDeleteTaskModalOpen && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-          <div className="bg-[#729cbe] px-8 py-6 rounded-xl shadow-2xl w-full max-w-[400px]">
-            <p className="text-[35px] justify-center"><strong>DO YOU WANT TO DELETE THIS TASK</strong></p>
-            <br></br>
-            <br></br>
-            <div className="flex justify-center gap-4">
-              <button onClick={handleDelete} className="bg-[#9cd3a1] text-black text-lg font-bold px-6 py-1.5 rounded-xl border-2 border-black hover:bg-green-400 transition">
+          <div className="bg-[#729cbe] px-8 py-6 rounded-xl shadow-2xl w-full max-w-[400px] flex flex-col items-center">
+      
+            <div className="mb-3 text-[#da8386]">
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                strokeWidth="1.5" 
+                stroke="currentColor" 
+                className="w-16 h-16"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" 
+                />
+              </svg>
+            </div>
+
+            <p className="text-[24px] text-center font-bold mb-6 text-black">
+              DO YOU WANT TO DELETE THIS TASK?
+            </p>
+            
+            <div className="flex justify-center gap-4 w-full">
+              <button 
+                onClick={handleDelete} 
+                className="bg-[#9cd3a1] text-black text-lg font-bold px-6 py-1.5 rounded-xl border-2 border-black hover:bg-green-400 transition w-full"
+              >
                 Yes
               </button>
-              <button onClick={() => setIsDeleteTaskModalOpen(false)} className="bg-[#da8386] text-black text-lg font-bold px-6 py-1.5 rounded-xl border-2 border-black hover:bg-red-400 transition">
+              <button 
+                onClick={() => setIsDeleteTaskModalOpen(false)} 
+                className="bg-[#da8386] text-black text-lg font-bold px-6 py-1.5 rounded-xl border-2 border-black hover:bg-red-400 transition w-full"
+              >
                 No
               </button>
             </div>
+
           </div>
         </div>
       )}
 
-      {/* POPUP EDIT TASK */}
       {/* POPUP EDIT TASK */}
       {isEditTaskModalOpen && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
