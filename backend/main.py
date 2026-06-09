@@ -25,7 +25,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-def get_db():
+def get_db(): # pragma: no cover
     db = SessionLocal()
     try:
         yield db
@@ -115,16 +115,6 @@ async def update_task(task_id: int, task_update: TaskUpdate, db: Session = Depen
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Nothing Changed"
-        )
-    if task_update.status != task.status and task_update.title != task.title:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You need to change the name first and check done this task later"
-        )
-    if isPriorityChanged and isStatusChanged:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You need to change the priority first and check done this task later"
         )
     if task_update.title is not None:
         task.title = task_update.title

@@ -124,6 +124,9 @@ const MainPage = () => {
 
   // Hàm tự động gán màu tuỳ theo priority từ Backend gửi về
   const getPriorityColor = (priority) => {
+    // Thêm dòng này để chống crash nếu dữ liệu bị thiếu
+    if (!priority) return 'text-blue-400'; 
+    
     const p = priority.toLowerCase();
     if (p === 'critical') return 'text-red-500';
     if (p === 'high') return 'text-yellow-400';
@@ -132,20 +135,19 @@ const MainPage = () => {
   };
 
   const filteredTasks = tasks.filter(task => {
-    if (activeTab === 'All Status') return true;
     if (activeTab === 'Incomplete Tasks') return task.status === 'Incomplete';
     if (activeTab === 'Completed Tasks') return task.status === 'Complete';
-    return true;
+    return true; // Nếu là All Status hoặc bất cứ giá trị nào khác, nó sẽ chạy vào đây -> Hết đỏ!
   });
 
   return (
     <div className="min-h-screen bg-[#cbf3fd] font-sans flex flex-col relative">
       
       {/* HEADER */}
-      <header className="bg-[#121929] px-6 py-3 flex justify-between items-center text-white">
-        <div className="flex items-center gap-3">
-          <img src={"./logo.png"}className='w-10 h-10' alt="Logo Website"></img>
-          <h1 className="text-[#ff9a9e] text-3xl font-bold tracking-wide" alt="Web'name">Todo Website</h1>
+      <header className="bg-[#0D1730] h-20 px-6 py-3 flex justify-between items-center text-white">
+        <div className="flex items-center gap-1 ml-[-50px]">
+          <img src={"./logo.png"}className='w-30 h-30' alt="Logo Website"></img>
+          <h1 className="text-[#FF9999] text-5xl font-bold tracking-wide" alt="Web'name">Todo Website</h1>
         </div>
       </header>
 
@@ -168,7 +170,7 @@ const MainPage = () => {
           </button>
           <button 
             onClick={() => setActiveTab('Completed Tasks')} 
-            className={`flex-1 sm:flex-none text-center px-3 sm:px-6 py-1.5 rounded text-xs sm:text-sm font-bold border border-gray-600 transition bg-[#cde49c] text-black ${activeTab === 'Completed Tasks' ? 'underline underline-offset-4' : ''}`}
+            className={`flex-1 sm:flex-none text-center px-3 sm:px-6 py-1.5 rounded text-xs sm:text-sm font-bold border border-gray-600 transition bg-[#D3FFAC] text-black ${activeTab === 'Completed Tasks' ? 'underline underline-offset-4' : ''}`}
           >
             Completed Tasks
           </button>
@@ -327,7 +329,7 @@ const MainPage = () => {
             
             <div className="mb-4">
               {/* Đã sửa lại tiêu đề cho đúng ngữ cảnh */}
-              <p className="text-[35px]"><strong>EDIT TASK</strong></p>
+              <p className="text-[35px] text-center"><strong>EDIT TASK</strong></p>
               <label className="block text-black text-lg font-bold mb-1">Name</label>
               <input 
                 type="text" 

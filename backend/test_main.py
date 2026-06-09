@@ -83,8 +83,6 @@ def test_create_missingtitle_cannotcreate():
 def test_create_missingbothtitleandpriority_cannotcreate():
     response = client.post("/api/v1/tasks", json={"title":"", "priority":""})
     assert response.status_code == 400
-def test_create_prioritynotallowed_cannotcreate():
-    response = client.post("/api/v1/tasks", json={"title":"", "priority":"Qúa khó", "status":"Incomplete"})
     assert response.status_code == 400
 def test_create_statuscannotbeallowed_cannotcreate():
     response = client.post("/api/v1/tasks", json={"title":"Testing task2", "priority": "Critical", "status":"Completed"})
@@ -138,28 +136,16 @@ def test_edit_priorityandtitlechanged_sucess():
         "status": "Incomplete"
     })
     assert update_res.status_code == 200
-def test_edit_titleandstatuschanged_cannotedit():
-    create_res = client.post("/api/v1/tasks", json={"title": "Cũ", "priority": "Low", "status":"Incomplete"})
-    task_id = create_res.json()["data"]["id"]
-    update_res = client.put(f"/api/v1/tasks/{task_id}", json={
-        "title": "Mới",
-        "priority": "Low",
-        "status": "Completed"
-    })
-    assert update_res.status_code == 400
-def test_edit_priorityandstatuschanged_cannotedit():
-    create_res = client.post("/api/v1/tasks", json={"title": "Cũ", "priority": "Low", "status":"Incomplete"})
-    task_id = create_res.json()["data"]["id"]
-    update_res = client.put(f"/api/v1/tasks/{task_id}", json={
-        "title": "Cũ",
-        "priority": "High",
-        "status": "Completed"
-    })
-    assert update_res.status_code == 400
-
 def test_create_prioritynotallowed_cannotcreate():
     response = client.post("/api/v1/tasks", json={"title":"New task","priority":"KAKAKAKAKA"})
     assert response.status_code == 400
 def test_create_statusnotallowed_cannotcreate():
     response = client.post("/api/v1/tasks", json={"title":"New Task","priority":"Critical","status":"kakaak"})
     assert response.status_code == 400
+def test_read_root_success():
+    response = client.get("/")
+    assert response.status_code == 200
+    expected_message = {
+        "message": "Welcome to the TodoWebsite API! This API provides endpoints for managing todo items and user accounts. Please refer to the documentation for more details on how to use the API."
+    }
+    assert response.json() == expected_message
