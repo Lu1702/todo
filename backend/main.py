@@ -49,11 +49,36 @@ async def ping():
 
 @app.post("/api/v1/tasks", status_code=status.HTTP_201_CREATED)
 async def create_task(task: TaskCreate, db: Session = Depends(get_db)):
+    if not task.title:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Task can not miss a title"
+        )
+    if task.status == "Completed":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This task have not created before!"
+        )
+    if not task.priority:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing the priority for this task"
+        )
+    if task.priority not in ["Critical", "High", "Medium", "Low"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Priority just can be Critical, High, Medium or Low"
+        )
+    if task.status != "Incomplete":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Task create with default status (Incomplete)"
+        )
     new_task = models.Task(
         title=task.title,
         priority=task.priority,
         status=task.status
-    )
+    )    
     db.add(new_task)
     db.commit()
     db.refresh(new_task)
@@ -65,6 +90,11 @@ async def create_task(task: TaskCreate, db: Session = Depends(get_db)):
 @app.get("/api/v1/tasks")
 async def get_tasks(db: Session = Depends(get_db)):
     tasks = db.query(models.Task).all()
+    if not tasks:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Empty task right now!!"
+        )
     return {
         "status": 200,
         "message": "Tasks retrieved successfully",
@@ -77,6 +107,24 @@ async def update_task(task_id: int, task_update: TaskUpdate, db: Session = Depen
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Task not found"
+        )
+    isNameChanged = task.title is not None and task_update.title != task.title
+    isPriorityChanged = task.priority is not None and task_update.priority != task.priority
+    isStatusChanged = task.status is not None and task_update.status != task.status
+    if not (isNameChanged or isPriorityChanged or isStatusChanged):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Nothing Changed"
+        )
+    if task_update.status != task.status and task_update.title != task.title:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You need to change the name first and check done this task later"
+        )
+    if isPriorityChanged and isStatusChanged:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You need to change the priority first and check done this task later"
         )
     if task_update.title is not None:
         task.title = task_update.title

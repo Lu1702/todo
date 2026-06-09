@@ -8,20 +8,14 @@ const MainPage = () => {
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
   const [taskToEdit, setTaskToEdit] = useState(null);
-  // 1. Các State quản lý dữ liệu động
+
   const [tasks, setTasks] = useState([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState('High');
   const [isEditTaskModalOpen, setIsEditTaskModalOpen] = useState(false);
   const [isDeleteTaskModalOpen, setIsDeleteTaskModalOpen] = useState(false);
-  // Đặt chung một URL để dễ gọi
   const API_URL = "http://localhost:8000/api/v1/tasks";
 
-  // ----------------------------------------------------------------
-  // CÁC HÀM GỌI API (FETCH, POST, PUT, DELETE)
-  // ----------------------------------------------------------------
-
-  // [GET] Lấy danh sách Task
   const fetchTasks = async () => {
     try {
       const response = await fetch(API_URL);
@@ -128,10 +122,6 @@ const MainPage = () => {
       }
   };
 
-  // ----------------------------------------------------------------
-  // CÁC HÀM HỖ TRỢ XỬ LÝ UI
-  // ----------------------------------------------------------------
-
   // Hàm tự động gán màu tuỳ theo priority từ Backend gửi về
   const getPriorityColor = (priority) => {
     const p = priority.toLowerCase();
@@ -154,43 +144,48 @@ const MainPage = () => {
       {/* HEADER */}
       <header className="bg-[#121929] px-6 py-3 flex justify-between items-center text-white">
         <div className="flex items-center gap-3">
-          <img src={"./logo.png"}className='w-10 h-10'></img>
-          <h1 className="text-[#ff9a9e] text-3xl font-bold tracking-wide">Todo Website</h1>
+          <img src={"./logo.png"}className='w-10 h-10' alt="Logo Website"></img>
+          <h1 className="text-[#ff9a9e] text-3xl font-bold tracking-wide" alt="Web'name">Todo Website</h1>
         </div>
       </header>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 p-6 rounded-[10px]">
+      <main className="flex-1 p-4 sm:p-6 rounded-[10px]">
         
-        {/* Tabs */}
-        <div className="flex bg-[#82abc2] w-fit p-2 rounded-[10px] gap-2 border-b-2 border-[#82abc2]">
-          <button onClick={() => setActiveTab('All Status')} className={`px-6 py-1.5 rounded text-sm font-bold border border-gray-600 transition bg-[#fbe49c] text-black ${activeTab === 'All Status' ? 'underline underline-offset-4' : ''}`}>
+        {/* Tabs: Trên mobile full-width và tự rớt dòng nếu thiếu chỗ, lên PC thì thu gọn */}
+        <div className="flex flex-wrap sm:flex-nowrap bg-[#82abc2] w-full sm:w-fit p-2 rounded-[10px] gap-2 border-b-2 border-[#82abc2]">
+          <button 
+            onClick={() => setActiveTab('All Status')} 
+            className={`flex-1 sm:flex-none text-center px-3 sm:px-6 py-1.5 rounded text-xs sm:text-sm font-bold border border-gray-600 transition bg-[#fbe49c] text-black ${activeTab === 'All Status' ? 'underline underline-offset-4' : ''}`}
+          >
             All Status
           </button>
-          <button onClick={() => setActiveTab('Incomplete Tasks')} className={`px-6 py-1.5 rounded text-sm font-bold border border-gray-600 transition bg-[#da8386] text-black ${activeTab === 'Incomplete Tasks' ? 'underline underline-offset-4' : ''}`}>
+          <button 
+            onClick={() => setActiveTab('Incomplete Tasks')} 
+            className={`flex-1 sm:flex-none text-center px-3 sm:px-6 py-1.5 rounded text-xs sm:text-sm font-bold border border-gray-600 transition bg-[#da8386] text-black ${activeTab === 'Incomplete Tasks' ? 'underline underline-offset-4' : ''}`}
+          >
             Incomplete Tasks
           </button>
-          <button onClick={() => setActiveTab('Completed Tasks')} className={`px-6 py-1.5 rounded text-sm font-bold border border-gray-600 transition bg-[#cde49c] text-black ${activeTab === 'Completed Tasks' ? 'underline underline-offset-4' : ''}`}>
+          <button 
+            onClick={() => setActiveTab('Completed Tasks')} 
+            className={`flex-1 sm:flex-none text-center px-3 sm:px-6 py-1.5 rounded text-xs sm:text-sm font-bold border border-gray-600 transition bg-[#cde49c] text-black ${activeTab === 'Completed Tasks' ? 'underline underline-offset-4' : ''}`}
+          >
             Completed Tasks
           </button>
         </div>
 
         {/* Task List */}
-        <div className="bg-[#79a3bc] rounded-[10px] rounded-b-xl rounded-tr-xl border-2 border-[#82abc2] p-4 relative min-h-[65vh] shadow-inner mt-2 h-[70vh] overflow-y-auto">
+        <div className="bg-[#79a3bc] rounded-[10px] rounded-b-xl rounded-tr-xl border-2 border-[#82abc2] p-3 sm:p-4 relative min-h-[65vh] shadow-inner mt-2 h-[70vh] overflow-y-auto">
           <div className="flex flex-col gap-5 pt-2">
             {filteredTasks.map((task) => (
-              <div key={task.id} className="relative bg-white rounded-md p-3 flex justify-between items-center shadow-sm border border-gray-300 mt-2">
-                
-                {/* Status Badge */}
-                <div className={`absolute -top-3 left-0 px-3 py-0.5 text-[9px] font-bold rounded-full border border-gray-500 text-black w-[150px] text-center ${
+              <div key={task.id} className="relative bg-white rounded-md p-4 pt-7 sm:pt-3 flex flex-col sm:flex-row justify-between items-start sm:items-center shadow-sm border border-gray-300 mt-4 sm:mt-2 gap-3">
+                <div className={`absolute -top-3 -left-1 sm:-left-3 px-3 py-0.5 text-[9px] font-bold rounded-full border border-gray-500 text-black w-[130px] text-center ${
                   task.status === 'Complete' ? 'bg-[#cde49c]' : 'bg-[#da8386]'
                 }`}>
                   {task.status}
                 </div>
-
-                {/* Left Content */}
-                <div className="flex items-center gap-4 mt-1">
-                  <span className="font-bold text-gray-800 text-sm">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto">
+                  <span className="font-bold text-gray-800 text-xs sm:text-sm break-words max-w-full">
                     {task.title} <span className={getPriorityColor(task.priority)}>[{task.priority}]</span>
                   </span>
                   {task.status === 'Incomplete' && (
@@ -199,15 +194,13 @@ const MainPage = () => {
                         setTaskToEdit(task); 
                         setIsEditTaskModalOpen(true); 
                       }} 
-                      className="bg-[#fbe49c] rounded-[10px] text-black border border-gray-500 px-4 py-0.5 text-xs font-bold rounded hover:bg-yellow-300 transition"
+                      className="bg-[#fbe49c] rounded-[10px] text-black border border-gray-500 px-3 py-0.5 text-[10px] sm:text-xs font-bold rounded hover:bg-yellow-300 transition"
                     >
                       EDIT
                     </button>
                   )}
                 </div>
-
-                {/* Right Content */}
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center justify-end gap-2 w-full sm:w-auto border-t border-gray-100 pt-2 sm:border-none sm:pt-0">
                   {task.status === 'Incomplete' && (
                     <button 
                       onClick={() => handleMarkDone(task.id)}
@@ -216,20 +209,23 @@ const MainPage = () => {
                       Done
                     </button>
                   )}
-                  <button onClick={() => {
-                    setTaskToDelete(task.id);
-                    setIsDeleteTaskModalOpen(true);
-                  }}
+                  <button 
+                    onClick={() => {
+                      setTaskToDelete(task.id);
+                      setIsDeleteTaskModalOpen(true);
+                    }}
                     className="bg-[#da8386] rounded-[10px] text-black border border-gray-500 px-4 py-0.5 text-[10px] font-bold rounded hover:bg-red-400 transition"
                   >
                     Delete
                   </button>
                 </div>
+
               </div>
             ))}
           </div>
 
-          <button onClick={() => setIsAddTaskModalOpen(true)} className="fixed bottom-6 right-6 w-16 h-16 bg-white rounded-full flex justify-center items-center text-4xl text-black border border-gray-400 shadow-lg hover:scale-105 transition hover:bg-gray-50 pb-2">
+          {/* Nút + bổ sung thêm hiệu ứng active:scale-95 bấm trên điện thoại cho mượt */}
+          <button onClick={() => setIsAddTaskModalOpen(true)} className="fixed bottom-6 right-6 w-14 h-14 sm:w-16 sm:h-16 bg-white rounded-full flex justify-center items-center text-3xl sm:text-4xl text-black border border-gray-400 shadow-lg hover:scale-105 active:scale-95 transition hover:bg-gray-50 pb-2 z-50">
             +
           </button>
         </div>
