@@ -6,15 +6,12 @@ from sqlalchemy.orm import Session
 
 import models
 from database import SessionLocal, engine
-
+models.Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="API for TodoWebsite",
-    description="This is the API for the TodoWebsite project. It provides endpoints for managing todo items and managing user accounts.",
+    description="This is the API for the TodoWebsite project. It provides endpoints for managing todo items.",
     version="1.0.0",
 )
-
-models.Base.metadata.create_all(bind=engine)
-
 origin = [
     "http://localhost:3000",
 ]
@@ -72,7 +69,7 @@ async def create_task(task: TaskCreate, db: Session = Depends(get_db)):
     if task.status != "Incomplete":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Task create with default status (Incomplete)"
+            detail="Task must be created with default status (Incomplete)"
         )
     new_task = models.Task(
         title=task.title,

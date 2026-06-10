@@ -1,5 +1,9 @@
 version: '3.8'
 services:
+  nextjs-app:
+    build: 
+      .context: .
+      dockerfile: dockerfile
   db:
     image: postgres:15-alpine
     container_name: todo_postgres_db
